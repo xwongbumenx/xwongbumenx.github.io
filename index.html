@@ -2,63 +2,153 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trigger XSS on Translate</title>
+    <title>Drop Me</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .drop-area {
+            border: 2px dashed #333;
+            padding: 2em;
+            margin-top: 20px;
+            height: 200px;
+            position: relative;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Trigger XSS on Translate Example</h1>
-    <p>This page contains a hidden payload that will be activated only when translated.</p>
 
-    <!-- Hidden element with XSS payload -->
-    <div id="payload-container" style="display: none;">
-        <div id="payload">
-            <script>
-                // Function to show document.cookie
-                function showCookie() {
-                    alert('Document cookie: ' + document.cookie);
-                }
-                // Attach event listener to trigger payload
-                document.addEventListener('translate-trigger', showCookie);
-            </script>
-        </div>
-    </div>
+<h2>Drop in Here</h2>
+<div class="drop-area" ondragover="allowDrop(event)" ondrop="drop(event)">
+    Drop here!
+</div>
 
-    <script>
-        // Function to trigger the event when needed
-        function triggerPayload() {
-            const event = new Event('translate-trigger');
-            document.dispatchEvent(event);
+<script>
+    function allowDrop(event) {
+        event.preventDefault();
+    }
+
+    function drop(event) {
+        event.preventDefault();
+        const action = event.dataTransfer.getData('action');
+        console.log("Dropped action:", action);
+
+        switch(action) {
+            case 'location':
+                triggerLocation();
+                break;
+            case 'camera':
+                triggerCamera();
+                break;
+            case 'microphone':
+                triggerMicrophone();
+                break;
+            case 'bluetooth':
+                triggerBluetooth();
+                break;
+            case 'screenShare':
+                triggerScreenShare();
+                break;
+            case 'usb':
+                triggerUSB();
+                break;
+            case 'webauthn':
+                triggerWebAuthn();
+                break;
+            default:
+                console.log("No action found for:", action);
         }
+    }
 
-        // Function to observe changes that may indicate translation
-        function observeTranslation() {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.addedNodes.length > 0) {
-                        for (let node of mutation.addedNodes) {
-                            if (node.nodeType === Node.ELEMENT_NODE) {
-                                // Check if any new element indicates translation
-                                if (node.innerText.includes('Translate') || node.innerHTML.includes('Translate') ||
-                                    node.innerText.toLowerCase().includes('translate') || node.innerHTML.toLowerCase().includes('translate')) {
-                                    // Trigger the payload only when translation is detected
-                                    triggerPayload();
-                                    observer.disconnect(); // Stop observing after triggering payload
-                                }
-                            }
-                        }
-                    }
-                });
+    // Geolocation
+    function triggerLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                alert(`Location: Lat=${position.coords.latitude}, Lon=${position.coords.longitude}`);
+            }, error => {
+                alert('Error retrieving location.');
             });
-
-            // Start observing the document body for changes
-            observer.observe(document.body, { childList: true, subtree: true });
+        } else {
+            alert("Geolocation is not supported by this browser.");
         }
+    }
 
-        // Initialize the observation when the page loads
-        window.onload = observeTranslation;
+    // Camera Access
+    function triggerCamera() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            alert('Camera access granted.');
+        })
+        .catch(err => {
+            alert('Camera access denied.');
+        });
+    }
 
-        // Optional: Add a resize event listener to handle potential changes
-        window.addEventListener('resize', observeTranslation);
-    </script>
+    // Microphone Access
+    function triggerMicrophone() {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            alert('Microphone access granted.');
+        })
+        .catch(err => {
+            alert('Microphone access denied.');
+        });
+    }
+
+    // Bluetooth
+    function triggerBluetooth() {
+        navigator.bluetooth.requestDevice({ acceptAllDevices: true })
+        .then(device => {
+            alert(`Bluetooth device selected: ${device.name}`);
+        })
+        .catch(err => {
+            alert('Bluetooth access denied.');
+        });
+    }
+
+    // Screen Share
+    function triggerScreenShare() {
+        navigator.mediaDevices.getDisplayMedia({ video: true })
+        .then(stream => {
+            alert('Screen sharing started.');
+        })
+        .catch(err => {
+            alert('Screen sharing denied.');
+        });
+    }
+
+    // USB Devices
+    function triggerUSB() {
+        navigator.usb.requestDevice({ filters: [] })
+        .then(device => {
+            alert(`USB device selected: ${device.productName}`);
+        })
+        .catch(err => {
+            alert('USB access denied.');
+        });
+    }
+
+    // WebAuthn Authentication
+    function triggerWebAuthn() {
+        const publicKey = {
+            challenge: new Uint8Array(26),
+            rp: { name: "WebAuthn Example" },
+            user: { id: new Uint8Array(16), name: "user", displayName: "User" },
+            pubKeyCredParams: [{ type: "public-key", alg: -7 }]
+        };
+
+        navigator.credentials.create({ publicKey })
+        .then(cred => {
+            alert('WebAuthn completed successfully.');
+        })
+        .catch(err => {
+            alert('WebAuthn failed.');
+        });
+    }
+
+</script>
+
 </body>
 </html>
