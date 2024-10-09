@@ -1,1 +1,5 @@
-test
+<body>
+<script>
+var p = (new DOMParser()).parseFromString("<form><math><mtext></mtext></math><svg xmlns='http://www.w3.org/2000/svg'><image href='' onerror='alert(document.domain)' /></svg></form>", "text/html");
+document.body.appendChild(p.body);
+</script>
